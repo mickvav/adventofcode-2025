@@ -191,9 +191,79 @@ impl Inp {
         println!("Final count: {:?}", count);
         return countcolors(colors);
     }
+    fn is_last(&self, colors: &Vec<usize>) -> bool {
+        if colors.len() == 0 {
+            return true;
+        };
+        let c0 = colors[0];
+        for c in colors.iter() {
+            if *c != c0 {
+                return false;
+            };
+        }
+        return true;
+    }
+    fn countvalue2(&self, jbt: &Jbtuple) -> i64 {
+        return jbt.a.v[0] * jbt.b.v[0];
+    }
     fn metrics2(&self) -> i64 {
-        let score: i64 = 0_i64;
-        return score;
+        let mut count: i64 = 0_i64;
+        let mut maxcolor: usize = 0;
+        let mut colors = vec![0; self.b.len()];
+        for (jbt, d) in self.distances.iter() {
+            println!("d: {:?} count: {:?}", d, count);
+            //println!("jbt: {:?} d: {:?}", jbt, d);
+            //println!("colors: {:?}", colors);
+            let idx1 = jbt.a.idx;
+            let idx2 = jbt.b.idx;
+            if colors[idx1] == 0 && colors[idx2] == 0 {
+                maxcolor = maxcolor + 1;
+                println!("new color: {:?} for {:?} and {:?}", maxcolor, idx1, idx2);
+                colors[idx1] = maxcolor;
+                colors[idx2] = maxcolor;
+                count = count + 1;
+                if self.is_last(&colors) {
+                    return self.countvalue2(jbt);
+                }
+                continue;
+            };
+            if colors[idx1] == colors[idx2] {
+                count = count + 1;
+                println!("same color: {:?}", colors[idx1]);
+                continue;
+            };
+            if colors[idx1] == 0 {
+                println!("idx1 {:?} joins {:?}", idx1, colors[idx2]);
+                colors[idx1] = colors[idx2];
+                count = count + 1;
+                if self.is_last(&colors) {
+                    return self.countvalue2(jbt);
+                }
+                continue;
+            };
+            if colors[idx2] == 0 {
+                println!("idx2 {:?} joins {:?}", idx2, colors[idx1]);
+                colors[idx2] = colors[idx1];
+                count = count + 1;
+                if self.is_last(&colors) {
+                    return self.countvalue2(jbt);
+                }
+                continue;
+            };
+            let oldc = colors[idx1];
+            println!("color {:?} becomes {:?}", oldc, colors[idx2]);
+            for i in 0..colors.len() {
+                if colors[i] == oldc {
+                    colors[i] = colors[idx2]
+                };
+            }
+            count = count + 1;
+            if self.is_last(&colors) {
+                return self.countvalue2(jbt);
+            }
+        }
+        println!("Final count: {:?}", count);
+        return countcolors(colors);
     }
 }
 
@@ -225,7 +295,7 @@ mod tests {
     #[test]
     fn it_works() {
         assert_eq!(read_file("test.txt").metrics(10), 40);
-        assert_eq!(read_file("test.txt").metrics2(), 0);
+        assert_eq!(read_file("test.txt").metrics2(), 25272);
     }
 }
 
